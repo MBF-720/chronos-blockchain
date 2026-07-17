@@ -53,8 +53,11 @@ const config: HardhatUserConfig = {
       chainId: 31337,
     },
     amoy: {
-      url: process.env.AMOY_RPC_URL || "https://rpc-amoy.polygon.technology",
-      chainId: 80002,
+      url:
+        process.env.RPC_URL ||
+        process.env.AMOY_RPC_URL ||
+        "https://rpc-amoy.polygon.technology",
+      chainId: process.env.CHAIN_ID ? Number(process.env.CHAIN_ID) : 80002,
       accounts: amoyAccounts(),
     },
   },

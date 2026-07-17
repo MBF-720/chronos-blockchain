@@ -26,20 +26,40 @@ async function main(): Promise<void> {
   const chronosToken = await hre.ethers.deployContract("ChronosToken", [
     deployer.address,
   ]);
+
+  const deploymentTransaction = chronosToken.deploymentTransaction();
+  if (!deploymentTransaction) {
+    throw new Error("Deployment transaction was not created");
+  }
+
   await chronosToken.waitForDeployment();
+  const receipt = await deploymentTransaction.wait();
+  if (!receipt) {
+    throw new Error("Deployment transaction was not confirmed");
+  }
 
   const address = await chronosToken.getAddress();
+  const [name, symbol, totalSupply, deployerIsMinter] = await Promise.all([
+    chronosToken.name(),
+    chronosToken.symbol(),
+    chronosToken.totalSupply(),
+    chronosToken.hasMinterRole(deployer.address),
+  ]);
 
-  console.log(` ChronosToken deployed to: ${address}`);
-  console.log(` Name   : ${await chronosToken.name()}`);
-  console.log(` Symbol : ${await chronosToken.symbol()}`);
+  console.log(` Contract Address   : ${address}`);
+  console.log(` Transaction Hash   : ${deploymentTransaction.hash}`);
+  console.log(` Block Number       : ${receipt.blockNumber}`);
+  console.log(` Network            : ${hre.network.name} (${network.chainId})`);
+  console.log(` Deployer Address   : ${deployer.address}`);
+  console.log(` Token Name         : ${name}`);
+  console.log(` Token Symbol       : ${symbol}`);
+  console.log(` Total Supply       : ${hre.ethers.formatUnits(totalSupply, 18)} ${symbol}`);
+  console.log(` Admin Address      : ${deployer.address}`);
+  console.log(` Deployer is Minter : ${deployerIsMinter}`);
   console.log("================================================");
 
   if (hre.network.name === "amoy") {
-    console.log("\nVerify on Polygonscan (after a few confirmations):");
-    console.log(
-      `  npx hardhat verify --network amoy ${address} ${deployer.address}`
-    );
+    console.log(` Explorer: https://amoy.polygonscan.com/address/${address}`);
   }
 }
 
